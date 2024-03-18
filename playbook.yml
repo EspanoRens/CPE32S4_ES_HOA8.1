@@ -1,0 +1,33 @@
+---
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: Install Updates
+    apt: 
+      upgrade: dist
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install tcpdump and wireshark
+    become: yes
+    package:
+      name:
+        - tcpdump
+        - wireshark
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Start manual collection of PCAP
+    command: tcpdump  -i enp0s3 -w capture.pcap
+    async: 120
+    poll: 0
+
+  - name: Make it executable
+    command: chmod +x /home/espano/capture.pcap
+
+  - name: Extract executable PCAP
+    fetch:
+      src: /home/espano/capture.pcap
+      dest: /home/espano/CPE32S4_ES_HOA8.1
